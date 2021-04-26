@@ -1,3 +1,7 @@
 .cpcache
 /.lsp
 /usermanager_db
+/resources/public/assets/js/*
+!/resources/public/assets/js/app.js
+/front/.shadow-cljs
+/front/node_modules

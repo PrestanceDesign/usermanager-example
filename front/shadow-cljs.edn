@@ -1,0 +1,16 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src"]
+
+ :dependencies
+ [[reagent "1.0.0"]
+  [alandipert/storage-atom "2.0.1"]
+  [applied-science/js-interop "0.2.7"]]
+
+ :builds
+ {:app
+  {:target :browser
+   :output-dir "../resources/public/assets/js"
+   :asset-path "/js"
+   :modules {:app {:init-fn reagent.inertia/init!}}
+   :devtools {:after-load reagent.inertia/mount-root}}}}
