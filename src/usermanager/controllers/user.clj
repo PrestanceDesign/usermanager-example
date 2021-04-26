@@ -2,7 +2,8 @@
 
 (ns usermanager.controllers.user
   "The main controller for the user management portion of this app."
-  (:require [ring.util.response :as resp]
+  (:require [inertia.middleware :as inertia]
+            [ring.util.response :as resp]
             [selmer.parser :as tmpl]
             [usermanager.model.user-manager :as model]))
 
@@ -24,15 +25,14 @@
         (resp/content-type "text/html"))))
 
 (defn reset-changes
-  [req]
+  [_]
   (reset! changes 0)
-  (assoc-in req [:params :message] "The change tracker has been reset."))
+  (inertia/render "default" {:message "The change tracker has been reset."}))
 
 (defn default
-  [req]
-  (assoc-in req [:params :message]
-                (str "Welcome to the User Manager application demo! "
-                     "This uses just Compojure, Ring, and Selmer.")))
+  [_]
+  (inertia/render "default" {:message (str "Welcome to the User Manager application demo! "
+                                          "This uses just Compojure, Ring, and Selmer.")}))
 
 (defn delete-by-id
   "Compojure has already coerced the :id parameter to an int."
@@ -52,19 +52,14 @@
   (let [db   (-> req :application/component :database)
         user (when-let [id (get-in req [:params :id])]
                (model/get-user-by-id db id))]
-    (-> req
-        (update :params assoc
-                :user user
-                :departments (model/get-departments db))
-        (assoc :application/view "form"))))
+    (inertia/render "user-form" {:user user
+                                 :departments (model/get-departments db)})))
 
 (defn get-users
   "Render the list view with all the users in the addressbook."
   [req]
   (let [users (model/get-users (-> req :application/component :database))]
-    (-> req
-        (assoc-in [:params :users] users)
-        (assoc :application/view "list"))))
+    (inertia/render "user-list" {:users users})))
 
 (defn save
   "This works for saving new users as well as updating existing users, by
@@ -73,12 +68,10 @@
   [req]
   (swap! changes inc)
   (-> req
-      :params
+      :body-params
       ;; get just the form fields we care about:
       (select-keys [:id :first_name :last_name :email :department_id])
       ;; convert form fields to numeric:
-      (update :id            #(some-> % not-empty Long/parseLong))
-      (update :department_id #(some-> % not-empty Long/parseLong))
       ;; qualify their names for domain model:
       (->> (reduce-kv (fn [m k v] (assoc! m (keyword "addressbook" (name k)) v))
                       (transient {}))

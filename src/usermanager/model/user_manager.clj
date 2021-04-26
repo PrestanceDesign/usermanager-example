@@ -6,7 +6,8 @@
   business logic and the persistence would be in a separate namespace."
   (:require [com.stuartsierra.component :as component]
             [next.jdbc :as jdbc]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql]
+            [next.jdbc.result-set :as rs]))
 
 ;; our database connection and initial data
 
@@ -86,7 +87,7 @@ create table addressbook (
   ;; allow the Database component to be "called" with no arguments
   ;; to produce the underlying datasource object
   clojure.lang.IFn
-  (invoke [_] datasource))
+  (invoke [_] (jdbc/with-options datasource {:builder-fn rs/as-unqualified-maps})))
 
 (defn setup-database [] (map->Database {:db-spec my-db}))
 

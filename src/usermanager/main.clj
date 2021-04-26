@@ -30,17 +30,17 @@
   This example uses a local SQLite database to store data."
   (:require [com.stuartsierra.component :as component]
             [compojure.coercions :refer [as-int]]
-            [compojure.core :refer [GET POST let-routes]]
+            [compojure.core :refer [GET let-routes POST]]
             [compojure.route :as route]
-            ;; we use Jetty by default but if you want to use
-            ;; http-kit instead, uncomment this line...
-            ;; [org.httpkit.server :refer [run-server]]
-            ;; ...and comment out this Jetty line:
+            [inertia.middleware :as inertia]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.defaults :as ring-defaults]
             [ring.util.response :as resp]
+            [selmer.parser :as html]
             [usermanager.controllers.user :as user-ctl]
             [usermanager.model.user-manager :as model]))
+
+(def asset-version "1")
 
 ;; Implement your application's lifecycle here:
 ;; Although the application config is not used in this simple
@@ -82,6 +82,9 @@
         resp
         (user-ctl/render-page resp)))))
 
+(defn template [data-page]
+  (html/render-file "layouts/default.html" {:page data-page}))
+
 ;; Helper for building the middleware:
 (defn- add-app-component
   "Middleware to add your application component into the request. Use
@@ -99,13 +102,14 @@
   [app-component app-middleware]
   (fn [handler]
     (-> handler
-        (app-middleware)
+        ;;(app-middleware)
         (add-app-component app-component)
         (ring-defaults/wrap-defaults (-> ring-defaults/site-defaults
-                                         ;; disable XSRF for now
-                                         (assoc-in [:security :anti-forgery] false)
-                                         ;; support load balancers
-                                         (assoc-in [:proxy] true))))))
+                                        ;; disable XSRF for now
+                                        (assoc-in [:security :anti-forgery] false)
+                                        ;; support load balancers
+                                        (assoc-in [:proxy] true)))
+        (inertia/wrap-inertia template asset-version))))
 
 ;; This is the main web handler, that builds routing middleware
 ;; from the application component (defined above). The handler is passed
