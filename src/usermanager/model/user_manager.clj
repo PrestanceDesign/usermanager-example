@@ -22,7 +22,9 @@
 (def ^:private initial-user-data
   "Seed the database with this data."
   [{:first_name "Sean" :last_name "Corfield"
-    :email "sean@worldsingles.com" :department_id 4}])
+    :email "sean@worldsingles.com" :department_id 4}
+   {:first_name "Michaël" :last_name "Salihi"
+    :email "contact@prestance-design.com" :department_id 4}])
 
 ;; database initialization
 
